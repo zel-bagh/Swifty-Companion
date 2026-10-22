@@ -1,5 +1,5 @@
-
-import React from 'react';
+import Config from 'react-native-config';
+import { useEffect } from 'react';
 import {
   Image,
   Pressable,
@@ -8,12 +8,41 @@ import {
   Text,
   View,
   useColorScheme,
+  Linking
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import { handleRedirect } from '../services/authService';
 
 import {colors} from '../theme/colors';
 
 export default function LoginScreen() {
+    useEffect(() => {
+      const subscription = Linking.addEventListener('url', event => {
+        handleRedirect(event.url);
+      });
+
+      return () => {
+        subscription.remove();
+      };
+    }, []);
+
+    const uid = Config.UID;
+    const secret = Config.SECRET;
+    if (!uid|| !secret) {
+      console.error("42 API env is not configured");
+      return;
+    }
+
+    const params = {
+      client_id: uid,
+      redirect_uri: 'swiftycompanion://oauth/callback',
+      response_type: "code",
+      scope: "public",
+      state: 'random_state_string',
+    };
+    const queryString = new URLSearchParams(params).toString();
+    const authorizationUrl = `https://api.intra.42.fr/oauth/authorize?${queryString}`;
+
   const isDark = useColorScheme() !== 'light';
   const theme = isDark ? colors.dark : colors.light;
 
@@ -86,8 +115,8 @@ export default function LoginScreen() {
         {/* Login button */}
         <Pressable
           style={[styles.loginButton, {backgroundColor: theme.secondary}]}
-          onPress={() => {
-            // We'll implement 42 OAuth here later.
+          onPress={async () => {
+            await Linking.openURL(authorizationUrl);
           }}>
           <Text style={styles.loginButtonText}>
             Continue with 42  →
