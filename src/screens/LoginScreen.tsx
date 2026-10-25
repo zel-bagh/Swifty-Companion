@@ -20,7 +20,7 @@ export default function LoginScreen() {
     const expectedState = useRef<string>(generateState());
     useEffect(() => {
       const subscription = Linking.addEventListener('url', event => {
-        handleRedirect(event.url, expectedState.current);
+        handleRedirect(event.url, params);
       });
 
       return () => {
@@ -29,9 +29,8 @@ export default function LoginScreen() {
     }, []);
 
     const uid = Config.UID;
-    const secret = Config.SECRET;
-    if (!uid || !secret) {
-      console.error("42 API env is not configured");
+    if (!uid) {
+      console.error("42 API uid is not configured");
       return;
     }
 
