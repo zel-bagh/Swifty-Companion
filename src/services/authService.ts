@@ -1,5 +1,6 @@
 import 'react-native-get-random-values';
 import Config from 'react-native-config';
+import { saveTokens } from './tokenStorageService';
 
 export function generateState(): string {
   const bytes = new Uint8Array(32);
@@ -21,7 +22,12 @@ export async function handleRedirect(url: string, params: any) {
     console.error('Invalid redirect URL or state mismatch');
     return;
   }
-  const token = await exchangeCodeForToken(code, params);
+  const token:any = await exchangeCodeForToken(code, params);
+  await saveTokens({
+    access_token: token.access_token,
+    refresh_token: token.refresh_token,
+    expires_at: Date.now() + token.expires_in * 1000,
+  });
 }
 
 async function exchangeCodeForToken(code: string, params: any): Promise<string | null> {
