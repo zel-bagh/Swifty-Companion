@@ -13,14 +13,14 @@ import {
 import {SafeAreaView} from 'react-native-safe-area-context';
 import { generateState } from '../services/authService';
 import { handleRedirect } from '../services/authService';
-
 import {colors} from '../theme/colors';
 
-export default function LoginScreen() {
+
+export default function LoginScreen({ onLoginSuccess }: { onLoginSuccess: () => void }) {
     const expectedState = useRef<string>(generateState());
     useEffect(() => {
       const subscription = Linking.addEventListener('url', event => {
-        handleRedirect(event.url, params);
+        handleRedirect(event.url, params, onLoginSuccess);
       });
 
       return () => {

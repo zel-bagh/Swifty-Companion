@@ -12,7 +12,7 @@ export function generateState(): string {
   ).join('');
 }
 
-export async function handleRedirect(url: string, params: any) {
+export async function handleRedirect(url: string, params: any, onLoginSuccess: () => void): Promise<void> {
   const parsedUrl = new URL(url);
 
   const code = parsedUrl.searchParams.get('code');
@@ -23,11 +23,20 @@ export async function handleRedirect(url: string, params: any) {
     return;
   }
   const token:any = await exchangeCodeForToken(code, params);
-  await saveTokens({
-    access_token: token.access_token,
-    refresh_token: token.refresh_token,
-    expires_at: Date.now() + token.expires_in * 1000,
-  });
+  if (!token)
+    return;
+  console.error(token)
+  try {
+      await saveTokens({
+        access_token: token.access_token,
+        refresh_token: token.refresh_token,
+        expires_in: token.expires_in,
+        created_at: token.created_at,
+      });
+      onLoginSuccess();
+    } catch (error) {
+      console.error('Failed to save tokens:', error);
+    }
 }
 
 async function exchangeCodeForToken(code: string, params: any): Promise<string | null> {

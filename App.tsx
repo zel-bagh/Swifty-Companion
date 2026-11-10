@@ -4,8 +4,10 @@ import LoadingScreen from './src/screens/LoadingScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import { useEffect, useState } from 'react';
 
+export type AuthStatus = 'checking' | 'valid' | 'invalid';
+
 export default function App() {
-  const [auth , setAuth] = useState('checking');
+  const [auth , setAuth] = useState<AuthStatus>('checking');
   useEffect(() => {
       // async function checkAuth() {
       //     try {
@@ -27,7 +29,7 @@ export default function App() {
     <SafeAreaProvider>
       {auth === 'checking' ? ( <LoadingScreen />) 
       : auth === 'valid' ? ( <ProfileScreen />)
-      :( <LoginScreen />)
+      :( <LoginScreen onLoginSuccess={() => setAuth('valid')} />)
       }
     </SafeAreaProvider>
   );
