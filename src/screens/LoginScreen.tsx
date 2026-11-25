@@ -1,5 +1,5 @@
 import Config from 'react-native-config';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Image,
   Pressable,
@@ -7,19 +7,23 @@ import {
   StyleSheet,
   Text,
   View,
-  useColorScheme,
   StatusBar,
-  Linking
+  Linking,
+  useWindowDimensions,
+  Animated,
+  Easing,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import { generateState } from '../services/authService';
 import { handleRedirect } from '../services/authService';
-import {colors} from '../theme/colors';
-import { Path, Svg, Circle } from 'react-native-svg';
+import { Path, Svg } from 'react-native-svg';
 
 
 export default function LoginScreen({ onLoginSuccess }: { onLoginSuccess: () => void }) {
     const expectedState = useRef<string>(generateState());
+    const { width, height } = useWindowDimensions();
+    const [typedText, setTypedText] = useState('');
+    const cursorOpacity = useRef(new Animated.Value(1)).current;
     useEffect(() => {
       const subscription = Linking.addEventListener('url', event => {
         handleRedirect(event.url, params, onLoginSuccess);
@@ -35,6 +39,43 @@ export default function LoginScreen({ onLoginSuccess }: { onLoginSuccess: () => 
       console.error("42 API uid is not configured");
       return;
     }
+    // Typewriter animation
+  useEffect(() => {
+    let index = 0;
+
+    const interval = setInterval(() => {
+      index++;
+
+      setTypedText(MESSAGE.slice(0, index));
+
+      if (index >= MESSAGE.length) {
+        clearInterval(interval);
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, []);
+  // Blinking cursor
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(cursorOpacity, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(cursorOpacity, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+
+    animation.start();
+
+    return () => animation.stop();
+  }, [cursorOpacity]);
 
     const params = {
       client_id: uid,
@@ -45,338 +86,356 @@ export default function LoginScreen({ onLoginSuccess }: { onLoginSuccess: () => 
     };
     const queryString = new URLSearchParams(params).toString();
     const authorizationUrl = `https://api.intra.42.fr/oauth/authorize?${queryString}`;
+    
+    const MESSAGE = 'Your campus.\nYour people.';
+    const PARTICLE_COUNT = 45;
 
-  // const isDark = useColorScheme() !== 'light';
-  // const theme = isDark ? colors.dark : colors.light;
+return (
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
 
-  // const networkImage = isDark;
-  //   ? require('../assets/dark/darkGlobe2.png')
-  //   : require('../assets/light/lightGlobe2.png');
-  // const logoImage = isDark
-  //   ? require('../assets/dark/42dark.png')
-  //   : require('../assets/light/42light.png');
+      {/* Campus section */}
+<View style={styles.hero}>
+  <Image
+    source={require('../assets/images/light/campus.png')}
+    style={styles.backgroundImage}
+    resizeMode="cover"
+    blurRadius={1.5}
+  />
 
-  // return (
-  //   <SafeAreaView
-  //     edges={['top', 'bottom']}
-  //     style={[styles.container, {backgroundColor: theme.background}]}>
-  //     <ScrollView
-  //       contentContainerStyle={styles.content}
-  //       showsVerticalScrollIndicator={false}>
+        {/* Dark overlay */}
+        <View style={styles.overlay} />
 
-  //       {/* Header */}
-  //       <View style={styles.header}>
-  //         <Image
-  //           source={logoImage}
-  //           style={styles.logo}
-  //           resizeMode="contain"
-  //         />
-
-  //         <View style={[styles.divider, {backgroundColor: theme.text}]} />
-
-  //         <View style={styles.brand}>
-  //           <Text style={[styles.brandTitle, {color: theme.text}]}>
-  //             SWIFTY
-  //           </Text>
-  //           <Text style={[styles.brandSubtitle, {color: theme.secondaryText}]}>
-  //             COMPANION
-  //           </Text>
-  //         </View>
-
-  //         <Text style={[styles.version, {color: theme.primary}]}>
-  //           v1.0
-  //         </Text>
-  //       </View>
-
-  //       {/* Network section */}
-  //       <View style={styles.networkSection}>
-  //         <Text style={[styles.networkLabel, {color: theme.primary}]}>
-  //           {'> GLOBAL NETWORK\n   ALL 42 CAMPUSES_'}
-  //         </Text>
-
-  //         <Image
-  //           source={networkImage}
-  //           style={styles.networkImage}
-  //           resizeMode="contain"
-  //         />
-  //       </View>
-
-  //       {/* Introduction */}
-  //       <View style={styles.introduction}>
-  //         <Text style={[styles.headline, {color: theme.text}]}>
-  //           Your campus.
-  //         </Text>
-  //         <Text style={[styles.headline, {color: theme.secondary}]}>
-  //           Your people.
-  //         </Text>
-
-  //         <Text style={[styles.description, {color: theme.secondaryText}]}>
-  //           {'Explore student profiles, skills,\nprojects, and the 42 community.'}
-  //         </Text>
-  //       </View>
-
-  //       {/* Login button */}
-  //       <Pressable
-  //         style={[styles.loginButton, {backgroundColor: theme.secondary}]}
-  //         onPress={async () => {
-  //           await Linking.openURL(authorizationUrl);
-  //         }}>
-  //         <Text style={styles.loginButtonText}>
-  //           Continue with 42  →
-  //         </Text>
-  //       </Pressable>
-
-  //       <Text style={[styles.loginHint, {color: theme.secondaryText}]}>
-  //         SIGN IN WITH YOUR 42 ACCOUNT
-  //       </Text>
-
-  //       {/* Footer */}
-  //       <Text style={[styles.footer, {color: theme.secondaryText}]}>
-  //         42 NETWORK  //  GLOBAL COMMUNITY
-  //       </Text>
-  //     </ScrollView>
-  //   </SafeAreaView>
-  // );
-  return (
-        <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-
-      {/* Decorative background */}
-      <View
-        style={StyleSheet.absoluteFill}
-        pointerEvents="none"
-      >
-        <Svg
-          style={styles.topDecoration}
-          width={200}
-          height={200}
+        {/* Floating particles */}
+        <View
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
         >
-          <Circle
-            cx={0}
-            cy={0}
-            r={170}
-            stroke="#DDDDDD"
-            strokeWidth={1}
-            fill="none"
-          />
-        </Svg>
+          {Array.from({ length: PARTICLE_COUNT }, (_, index) => (
+            <Particle
+              key={index}
+              width={width}
+              height={height * 0.7}
+            />
+          ))}
+        </View>
 
-        <Svg
-          style={styles.bottomDecoration}
-          width={200}
-          height={200}
+        <SafeAreaView
+          edges={['top']}
+          style={styles.heroContent}
         >
-          <Circle
-            cx={200}
-            cy={200}
-            r={170}
-            stroke="#DDDDDD"
-            strokeWidth={1}
-            fill="none"
+          {/* App branding */}
+          <View style={styles.header}>
+            <Svg width={38} height={32} viewBox="0 0 48 40">
+              <Path
+                d="M18 2H32L14 23L0 28Z"
+                fill="#FFFFFF"
+              />
+              <Path
+                d="M34 12H48L27 38H13Z"
+                fill="#FFFFFF"
+              />
+            </Svg>
+
+            <Text style={styles.appName}>
+              Swifty Companion
+            </Text>
+          </View>
+
+          {/* Animated welcome message */}
+          <View style={styles.welcome}>
+            <View style={styles.messageContainer}>
+              <Text style={[styles.message, { opacity: 0 }]}>
+                {MESSAGE}|
+              </Text>
+
+              <Text style={[styles.message, styles.typedMessage]}>
+                {typedText}
+                <Animated.Text style={{ opacity: cursorOpacity }}>
+                  |
+                </Animated.Text>
+              </Text>
+            </View>
+
+            <View style={styles.taglineContainer}>
+              <View style={styles.line} />
+
+              <Text style={styles.tagline}>
+                LEARN. BUILD. CONNECT.
+              </Text>
+
+              <View style={styles.line} />
+            </View>
+          </View>
+        </SafeAreaView>
+        <Svg
+          width="100%"
+          height={50}
+          viewBox="0 0 400 50"
+          preserveAspectRatio="none"
+          style={{ position: 'absolute', bottom: -1, left: 0, right: 0 }}
+        >
+          <Path
+            d="M0 25 C100 65 280 -15 400 25 L400 50 L0 50 Z"
+            fill="#FFFFFF"
           />
         </Svg>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-        bounces={false}
+      {/* Authentication section */}
+      <SafeAreaView
+        edges={['bottom']}
+        style={styles.authentication}
       >
-        {/* App branding */}
-        <View style={styles.header}>
-          <Svg width={36} height={30} viewBox="0 0 48 40">
-            <Path
-              d="M18 2H32L14 23L0 28Z"
-              fill="#111111"
-            />
-            <Path
-              d="M34 12H48L27 38H13Z"
-              fill="#111111"
-            />
-          </Svg>
-
-          <Text style={styles.appName}>
-            Swifty Companion
-          </Text>
-        </View>
-
-        <View style={styles.welcomeSection}>
-          {/* Globe illustration */}
+        <Pressable
+          onPress={async () => {
+            await Linking.openURL(authorizationUrl);
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Continue with 42"
+          style={({ pressed }) => [
+            styles.loginButton,
+            pressed && styles.buttonPressed,
+          ]}
+        >
           <Image
-            source={require('../assets/images/light/globe2.png')}
-            style={styles.globe}
+            source={require('../assets/images/light/1337-white.png')}
+            style={styles.schoolLogo}
             resizeMode="contain"
           />
 
-          {/* Welcome message */}
-          <View style={styles.introduction}>
-            <Text style={styles.title}>
-              {'Your campus.\nYour people.'}
-            </Text>
+          <View style={styles.separator} />
 
-            <Text style={styles.description}>
-              Stay connected with your 42 campus,
-              your projects, and your community.
-            </Text>
-          </View>
-        </View>
+          <Text style={styles.buttonText}>
+            Continue with 42
+          </Text>
 
-        {/* Authentication */}
-        <View style={styles.authentication}>
-          <Pressable
-            onPress={async () => {
-              // await Linking.openURL(authorizationUrl);
-            }}
-            // accessibilityRole="button"
-            // accessibilityLabel="Continue with 42"
-            style={({ pressed }) => [
-              styles.loginButton,
-              pressed && styles.buttonPressed,
-            ]}
-          >
-            <Image
-              source={require('../assets/images/light/1337-white.png')}
-              style={styles.schoolLogo}
-              resizeMode="contain"
+          <Svg width={22} height={22} viewBox="0 0 24 24">
+            <Path
+              d="M4 12H20M14 6L20 12L14 18"
+              stroke="#FFFFFF"
+              strokeWidth={1.8}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          </Svg>
+        </Pressable>
+
+        {/* Authentication footer */}
+        <View style={styles.footer}>
+          <Svg width={20} height={22} viewBox="0 0 24 24">
+            <Path
+              d="M12 2L21 6V11C21 16 17 20 12 22C7 20 3 16 3 11V6L12 2Z"
+              stroke="#626262"
+              strokeWidth={1.6}
+              strokeLinejoin="round"
+              fill="none"
             />
 
-            <View style={styles.separator} />
-
-            <Text style={styles.buttonText}>
-              Continue with 42
-            </Text>
-          </Pressable>
-
-          {/* Authentication footer */}
-          <View style={styles.footer}>
-            <Svg
-              width={20}
-              height={22}
-              viewBox="0 0 24 24"
+            <Path
+              d="M8 12L11 15L16 9"
+              stroke="#626262"
+              strokeWidth={1.6}
+              strokeLinecap="round"
+              strokeLinejoin="round"
               fill="none"
-            >
-              <Path
-                d="M12 2L21 6V11C21 16 17 20 12 22C7 20 3 16 3 11V6L12 2Z"
-                stroke="#626262"
-                strokeWidth={1.6}
-                strokeLinejoin="round"
-              />
+            />
+          </Svg>
 
-              <Path
-                d="M8 12L11 15L16 9"
-                stroke="#626262"
-                strokeWidth={1.6}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-
-            <Text style={styles.footerText}>
-              Authentication via 42 Intra
-            </Text>
-          </View>
+          <Text style={styles.footerText}>
+            Authentication via 42 Intra
+          </Text>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
+
+// Floating particle component
+
+function Particle({
+  width,
+  height,
+}: {
+  width: number;
+  height: number;
+}) {
+  const progress = useRef(new Animated.Value(0)).current;
+
+  const particle = useRef({
+    x: Math.random(),
+    size: 1 + Math.random() * 2,
+    duration: 8000 + Math.random() * 10000,
+    delay: Math.random() * 8000,
+    drift: 10 + Math.random() * 30,
+    opacity: 0.3 + Math.random() * 0.6,
+  }).current;
+
+  useEffect(() => {
+    const animation = Animated.sequence([
+      Animated.delay(particle.delay),
+
+      Animated.loop(
+        Animated.timing(progress, {
+          toValue: 1,
+          duration: particle.duration,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+      ),
+    ]);
+
+    animation.start();
+
+    return () => animation.stop();
+  }, [progress, particle]);
+
+  const translateY = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [height + 10, -10],
+  });
+
+  const translateX = progress.interpolate({
+    inputRange: [0, 0.2, 0.4, 0.6, 0.8, 1],
+    outputRange: [
+      0,
+      particle.drift,
+      -particle.drift * 0.5,
+      particle.drift * 0.8,
+      -particle.drift,
+      particle.drift * 0.3,
+    ],
+  });
+
+  const opacity = progress.interpolate({
+    inputRange: [0, 0.15, 0.8, 1],
+    outputRange: [0, particle.opacity, particle.opacity, 0],
+  });
+
+  return (
+    <Animated.View
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: particle.x * width,
+        width: particle.size,
+        height: particle.size,
+        borderRadius: particle.size / 2,
+        backgroundColor: '#FFFFFF',
+        opacity,
+        transform: [
+          { translateX },
+          { translateY },
+        ],
+      }}
+    />
+  );
+}
+
+// Styles
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: '#FFFFFF',
   },
 
-  content: {
-    flexGrow: 1,
-    paddingHorizontal: 28,
-    paddingTop: 28,
-    paddingBottom: 24,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 30,
+  hero: {
+    height: '70%',
+    overflow: 'hidden',
+    backgroundColor: '#151B20',
   },
 
-  // Background decorations
-
-  topDecoration: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
+  overlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(8, 15, 22, 0.58)',
   },
 
-  bottomDecoration: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
+  heroContent: {
+    flex: 1,
+    paddingHorizontal: 24,
   },
-
-  // App branding
 
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
+    paddingTop: 32,
   },
 
   appName: {
     fontFamily: 'Geist-SemiBold',
-    fontSize: 21,
-    letterSpacing: -0.6,
-    color: '#111111',
+    fontSize: 23,
+    letterSpacing: -0.8,
+    color: '#FFFFFF',
     flexShrink: 1,
   },
 
-  // Globe illustration
-  welcomeSection: {
-      width: '100%',
-      alignItems: 'center',
-      gap: 8,
-  },
-
-  globe: {
-    width: '50%',
-    height: '50%',
-    // maxWidth: 340,
-    aspectRatio: 1,
-    // backgroundColor: '#F5F5F5',
-    marginTop: 50,
-    marginBottom: 0,
-  },
-
-  // Welcome message
-
-  introduction: {
-    width: '100%',
+  welcome: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
+    paddingBottom: 30,
   },
 
-  title: {
-    fontFamily: 'Geist-Bold',
-    fontSize: 36,
-    lineHeight: 40,
-    letterSpacing: -1.5,
-    color: '#111111',
-    textAlign: 'center',
+  messageContainer: {
+    position: 'relative',
   },
 
-  description: {
+  message: {
+    fontFamily: 'monospace',
+    fontSize: 28,
+    lineHeight: 42,
+    color: '#FFFFFF',
+    letterSpacing: -1,
+    textAlign: 'left',
+  },
+
+  backgroundImage: {
+  ...StyleSheet.absoluteFill,
+  width: '100%',
+  height: '100%',
+},
+
+  typedMessage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+  },
+
+  taglineContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    marginTop: 32,
+    width: '100%',
+  },
+
+  tagline: {
     fontFamily: 'Geist-Regular',
-    fontSize: 16,
-    lineHeight: 23,
-    color: '#626262',
-    textAlign: 'center',
-    marginTop: 18,
-    maxWidth: 320,
+    fontSize: 10,
+    letterSpacing: 2,
+    color: '#DDDDDD',
   },
 
-  // Authentication
+  line: {
+    flex: 1,
+    maxWidth: 40,
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+  },
 
   authentication: {
-    width: '100%',
-    maxWidth: 420,
-    marginTop: 20,
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    paddingHorizontal: 28,
+    paddingVertical: 24,
+    gap: 22,
   },
 
   loginButton: {
@@ -385,43 +444,44 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#111111',
     borderRadius: 16,
-    minHeight: 56,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    gap: 18,
+    minHeight: 60,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    gap: 16,
   },
 
   buttonPressed: {
     opacity: 0.8,
+    transform: [{ scale: 0.98 }],
   },
 
   schoolLogo: {
-    width: 70,
-    height: 26,
+    width: 80,
+    // height: 20,
+    aspectRatio: 4.15,
+    tintColor: '#FFFFFF',
   },
 
   separator: {
     width: 1,
-    height: 22,
+    height: 26,
     backgroundColor: '#777777',
   },
 
   buttonText: {
+    flex: 1,
     fontFamily: 'Geist-SemiBold',
     fontSize: 17,
     color: '#FFFFFF',
-    letterSpacing: -0.3,
-    flexShrink: 1,
+    textAlign: 'center',
+    letterSpacing: -0.4,
   },
-
-  // Footer
 
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    marginTop: 18,
   },
 
   footerText: {
