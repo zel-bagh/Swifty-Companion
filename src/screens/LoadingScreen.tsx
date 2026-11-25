@@ -38,7 +38,7 @@ export default function LoadingPage() {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <Image
-          source={require('../assets/light/42light.png')}
+          source={require('../assets/light/1337light.png')}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -71,9 +71,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: 150,
-    height: 110,
-    marginBottom: 22,
+    width: 100,
+    height: 60,
+    // marginBottom: 10,
+    // borderWidth: 1,
+    // borderColor: ' #000000',
   },
   messageContainer: {
     flexDirection: 'row',
@@ -81,11 +83,11 @@ const styles = StyleSheet.create({
   },
   message: {
     fontFamily: 'monospace',
-    fontSize: 20,
+    fontSize: 15,
     fontWeight: '500',
     color: '#111111',
   },
   spinnerContainer: {
-    marginTop: 40,
+    marginTop: 15,
   },
 });

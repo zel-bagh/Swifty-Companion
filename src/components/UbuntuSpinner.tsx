@@ -8,7 +8,7 @@ type UbuntuSpinnerProps = {
 };
 
 export default function UbuntuSpinner({
-  size = 28,
+  size = 25,
   color = '#222222',
 }: UbuntuSpinnerProps) {
   const rotation = useRef(new Animated.Value(0)).current;
